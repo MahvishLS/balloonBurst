@@ -1,0 +1,89 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+}
+
+body {
+    background-image: url(assets/Symbol\ 3\ copy.png);
+    background-size: contain;
+    background-position: center;
+}
+
+.pumpBody{
+    position: absolute;
+    right: 15px;
+    bottom: -35px;
+    height: 285px;
+    z-index: 1000;
+}
+
+.pumpSide{
+    position: absolute;
+    bottom: -23px;
+    right: 180px;
+    height: 280px;
+    
+}
+
+.pumpTop{
+    position: absolute;
+    bottom: 140px;
+    height: 280px;
+    right: 21px;
+}
+
+.pumpTop {
+    position: absolute;
+    bottom: 140px;
+    height: 280px;
+    right: 21px;
+    transition: transform 0.2s;
+}
+
+.pump-active {
+    animation: pumpBalloon 0.5s ease; 
+}
+
+@keyframes pumpBalloon {
+    0%{
+        transform: translateY(0);
+    }
+    50%{
+        transform: translateY(25%);
+    }
+    100%{
+        transform: translateY(0);
+    }
+}
+
+.balloon {
+    height: 100%;
+    transition: transform 0.3s;
+}
+
+.balloonDiv{
+    height: 60px;
+    position: absolute;
+    bottom: 198px;
+    right: 362px;
+    transition: transform 0.3s;
+    transform-origin: bottom center;
+}
+
+.alphabet-overlay{
+    height: 32px;
+    position: absolute;
+    bottom: 18px;
+    right: 14px;
+}
+
+.balloonString{
+    position: absolute;
+    bottom: -64px;
+    right: -26px;
+    height: 100px;
+    opacity: 0;
+    transition: all 0.3s;
+}
