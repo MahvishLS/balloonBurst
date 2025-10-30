@@ -1,6 +1,7 @@
-const pump = document.querySelector('.pump');
+
+const pumps = document.querySelectorAll('.pump'); // now supports multiple pumps
 const balloonContainer = document.getElementById('balloon-container');
-const maxInflationLevel = 5;
+const maxInflationLevel = 3;
 
 const balloonImages = [
     'assets/balloon1.png',
@@ -16,7 +17,6 @@ const balloonImages = [
 ];
 
 let currentBalloonIndex = 0;
-
 let pumpLoaded = localStorage.getItem('pumpLoaded') === 'true';
 
 function createBalloon() {
@@ -27,12 +27,11 @@ function createBalloon() {
     balloon.className = 'balloon';
     balloon.src = balloonImages[currentBalloonIndex];
     balloon.dataset.inflationLevel = 1;
-    
+
     const alphabetOverlay = document.createElement('img');
     alphabetOverlay.className = 'alphabet-overlay';
-   
-    const randAlphabet = Math.floor(Math.random() * 100 % 26) + 1;
-    alphabetOverlay.src = `assets/Symbol 100${randAlphabet}.png`; 
+    const randAlphabet = Math.floor(Math.random() * 26) + 1;
+    alphabetOverlay.src = `assets/Symbol 100${randAlphabet}.png`;
 
     const balloonString = document.createElement('img');
     balloonString.className = 'balloonString';
@@ -41,22 +40,44 @@ function createBalloon() {
     balloonDiv.appendChild(balloon);
     balloonDiv.appendChild(alphabetOverlay);
     balloonDiv.appendChild(balloonString);
-
     balloonContainer.appendChild(balloonDiv);
 
     return balloonDiv;
 }
 
-// Add pump animation listener once, outside the main click event
-const pumpTop = pump.querySelector('.pumpTop');
-pump.addEventListener('click', () => {
+pumps.forEach((pump) => {
+  const pumpTop = pump.querySelector('.pumpTop');
+
+  // --- Attach the animationend listener ONCE (persistent) ---
+  // This removes the 'pump-active' class whenever the animation finishes.
+  // IMPORTANT: do NOT use { once: true } here, otherwise the listener
+  // will be removed after the first animation and won't run on subsequent clicks.
+  pumpTop.addEventListener('animationend', () => {
+    pumpTop.classList.remove('pump-active');
+  });
+
+  // Click handler only adds the class (animation will auto-remove via above listener)
+  pump.addEventListener('click', () => {
     pumpTop.classList.add('pump-active');
-    pumpTop.addEventListener('animationend', () => {
-        pumpTop.classList.remove('pump-active');
-    }, { once: true });
+    handlePumpAction(); // your existing pump logic
+  });
 });
 
-pump.addEventListener('click', () => {
+// Attach click listeners to both pumps
+pumps.forEach((pump) => {
+    const pumpTop = pump.querySelector('.pumpTop');
+
+    pump.addEventListener('click', () => {
+        pumpTop.classList.add('pump-active');
+        pumpTop.addEventListener('animationend', () => {
+            pumpTop.classList.remove('pump-active');
+        }, { once: true });
+        handlePumpAction();
+    });
+});
+
+// Handle balloon pumping
+function handlePumpAction() {
     const existingBalloons = document.querySelectorAll('.balloonDiv');
     
     if (existingBalloons.length > 0 && pumpLoaded) {
@@ -78,7 +99,7 @@ pump.addEventListener('click', () => {
         pumpLoaded = true; 
         localStorage.setItem('pumpLoaded', 'true');
     }
-});
+}
 
 function inflateBalloon(balloonDiv) {
     const balloon = balloonDiv.querySelector('.balloon');
@@ -91,17 +112,22 @@ function inflateBalloon(balloonDiv) {
         balloon.dataset.inflationLevel = currentInflationLevel + 1;
     }
 
-    balloonDiv.onclick = () => {
-        if (alphabetOverlay) alphabetOverlay.style.display = 'none';
-        if (balloonString) balloonString.style.display = 'none';
+    balloonDiv.onclick = () => burstBalloon(balloonDiv);
+}
 
-        balloon.src = 'assets/burst2.png';
-        balloonDiv.style.height = '130px';
-        setTimeout(() => {
-            balloonDiv.style.display = 'none';
-            balloonDiv.remove();
-        }, 300);
-    };
+function burstBalloon(balloonDiv) {
+    const balloon = balloonDiv.querySelector('.balloon');
+    const alphabetOverlay = balloonDiv.querySelector('.alphabet-overlay');
+    const balloonString = balloonDiv.querySelector('.balloonString');
+
+    if (alphabetOverlay) alphabetOverlay.style.display = 'none';
+    if (balloonString) balloonString.style.display = 'none';
+
+    balloon.src = 'assets/burst2.png';
+    balloonDiv.style.height = '130px';
+    setTimeout(() => {
+        balloonDiv.remove();
+    }, 300);
 }
 
 function startFloating(balloonDiv) {
@@ -115,3 +141,18 @@ function startFloating(balloonDiv) {
 
     currentBalloonIndex = (currentBalloonIndex + 1) % balloonImages.length; 
 }
+
+//Keyboard controls: Space = pump, Enter = burst last balloon
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        e.preventDefault();
+        handlePumpAction(); // pump balloon
+    }
+    if (e.code === 'Enter') {
+        const existingBalloons = document.querySelectorAll('.balloonDiv');
+        if (existingBalloons.length > 0) {
+            const lastBalloonDiv = existingBalloons[existingBalloons.length - 1];
+            burstBalloon(lastBalloonDiv);
+        }
+    }
+});
